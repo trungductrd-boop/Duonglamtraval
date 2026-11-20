@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Làng cổ Đường Lâm — Hành trình về nguồn cội</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="logo">🏛️</span><div><h1>ĐƯỜNG LÂM</h1><small>Làng cổ 1000+ năm tuổi · Sơn Tây · Hà Nội</small></div></div>
+  <nav>
+    <a href="#" data-view="home" class="active">Trang chủ</a>
+    <a href="#" data-view="map">Bản đồ & Lộ trình</a>
+    <a href="#" data-view="shop">Shop chỗ ở</a>
+    <a href="#" data-view="business">Kinh doanh</a>
+  </nav>
+  <div class="auth-area">
+    <button id="btn-ai" class="btn-ai">🤖 AI Guide</button>
+    <span id="user-chip" hidden></span>
+    <button id="btn-auth" class="btn ghost">Đăng nhập</button>
+  </div>
+</header>
+
+<main>
+<!-- HOME -->
+<section id="view-home" class="view active">
+  <div class="hero">
+    <video autoplay muted loop playsinline poster="https://images.unsplash.com/photo-1526481280693-3bfa7568e0f3?q=80&w=1600">
+      <source src="" type="video/mp4">
+    </video>
+    <div class="hero-overlay">
+      <h2>Hành trình về nguồn cội<br><em>Làng cổ Đường Lâm</em></h2>
+      <p>Nơi đá ong ố màu thời gian, mái ngói rìu nghìn năm, con đường đất đỏ âm ỷ tiếng hồng...</p>
+      <div class="hero-actions">
+        <button class="btn primary" onclick="navigate('map')">🗺️ Khám phá bản đồ</button>
+        <button class="btn" onclick="startNarration('vi')">🔊 Nghe thuyết minh</button>
+      </div>
+    </div>
+  </div>
+  <div class="lang-picker card">
+    🌐 Ngôn ngữ thuyết minh AI:
+    <select id="voice-lang">
+      <option value="vi">🇻🇳 Tiếng Việt</option>
+      <option value="en">🇬🇧 English</option>
+      <option value="ja">🇯🇵 日本語</option>
+      <option value="ko">🇰🇷 한국어</option>
+      <option value="zh">🇨🇳 中文</option>
+      <option value="fr">🇫🇷 Français</option>
+      <option value="th">🇹🇭 ไทย</option>
+    </select>
+    <small>Có thể dịch + đọc bằng AI hoặc dùng giọng hệ thống ngay lập tức</small>
+  </div>
+  <div class="grid" id="place-grid"></div>
+  <div class="section-title"><h3>🍽️ Đặc sản</h3><p>Miến soạn, chè kho, củ lạc rang — tinh hoa ẩm thực Đường Lâm</p></div>
+  <div class="grid" id="food-grid"></div>
+</section>
+
+<!-- MAP -->
+<section id="view-map" class="view">
+  <div class="map-layout">
+    <div id="map"></div>
+    <aside class="route-panel card">
+      <h3>🧭 Lộ trình của bạn</h3>
+      <button id="btn-locate" class="btn primary w100">📍 Định vị vị trí của tôi</button>
+      <label>Điểm đi (vị trí của tôi)</label><div id="route-from" class="hint">Chưa định vị</div>
+      <label>Điểm đến</label>
+      <select id="route-to"></select>
+      <label>Phương tiện</label>
+      <select id="route-mode">
+        <option value="foot">🚶 Đi bộ</option>
+        <option value="bike">🚲 Xe đạp</option>
+        <option value="car">🚗 Ô tô</option>
+      </select>
+      <button id="btn-route" class="btn primary w100">Xem lộ trình</button>
+      <div id="route-info"></div>
+      <button id="btn-narrate-route" class="btn w100">🔊 AI đọc lộ trình</button>
+      <div class="places-list" id="map-places"></div>
+    </aside>
+  </div>
+</section>
+
+<!-- SHOP -->
+<section id="view-shop" class="view">
+  <div class="section-title"><h3>🏪 Shop chỗ ở & ẩm thực Đường Lâm</h3><p>Đặt chỗ nghỉ, ăn uống với chủ nhà địa phương — cập nhật realtime</p></div>
+  <div id="shop-grid" class="grid"></div>
+</section>
+
+<!-- BUSINESS -->
+<section id="view-business" class="view">
+  <div id="biz-login-hint" class="card">
+    <h3>Bạn là chủ homestay / quán ăn?</h3>
+    <p>Đăng ký <b>tài khoản kinh doanh</b> để cập nhật chỗ ở, câu chuyện của riêng bạn — AI sẽ tự dịch & đọc thành giọng nói nhiều ngôn ngữ cho khách quốc tế.</p>
+    <button class="btn primary" onclick="openAuth('register')">Tạo tài khoản kinh doanh</button>
+  </div>
+  <div id="biz-panel" hidden>
+    <div class="section-title"><h3>Quản lý chỗ ở của tôi</h3></div>
+    <form id="listing-form" class="card">
+      <input name="title" placeholder="Tên chỗ ở / quán *" required>
+      <select name="type" required>
+        <option value="homestay">Homestay</option>
+        <option value="khachsan">Khách sạn</option>
+        <option value="quanAn">Quán ăn</option>
+        <option value="cuaHang">Cửa hàng</option>
+      </select>
+      <input name="price" type="number" placeholder="Giá (VNĐ/đêm)">
+      <input name="address" placeholder="Địa chỉ">
+      <input name="phone" placeholder="Điện thoại">
+      <input name="lat" placeholder="Vĩ độ (lat) — copy từ bản đồ">
+      <input name="lng" placeholder="Kinh độ (lng)">
+      <textarea name="description_vi" placeholder="Câu chuyện của bạn (tiếng Việt) — AI sẽ tự dịch & đọc nhiều ngôn ngữ"></textarea>
+      <button class="btn primary">💾 Lưu & phát hành</button>
+    </form>
+    <div id="my-listings"></div>
+  </div>
+</section>
+</main>
+
+<!-- AI PANEL -->
+<div id="ai-panel" class="ai-panel">
+  <div class="ai-head"><span>🤖 Hướng dẫn viên AI Đường Lâm</span><button onclick="toggleAI(false)">✕</button></div>
+  <div id="ai-msgs"></div>
+  <div class="ai-input">
+    <input id="ai-input" placeholder="Hỏi về Đường Lâm...">
+    <button onclick="aiSend()">➤</button>
+    <button onclick="aiSpeakLast()" title="Đọc câu trả lời">🔊</button>
+  </div>
+</div>
+
+<!-- AUTH MODAL -->
+<div id="auth-modal" class="modal" hidden>
+  <div class="modal-card card">
+    <h3 id="auth-title">Đăng nhập</h3>
+    <form id="auth-form">
+      <input name="email" type="email" placeholder="Email" required>
+      <input name="password" type="password" placeholder="Mật khẩu" required>
+      <input name="name" placeholder="Họ tên" hidden>
+      <select name="role" hidden>
+        <option value="user">Khách du lịch</option>
+        <option value="business">Tài khoản kinh doanh</option>
+      </select>
+      <input name="business_name" placeholder="Tên doanh nghiệp/homestay" hidden>
+      <button class="btn primary w100" id="auth-submit">Đăng nhập</button>
+    </form>
+    <div class="switch"><a href="#" id="auth-switch">Chưa có tài khoản? Đăng ký</a></div>
+    <button class="close" onclick="closeAuth()">✕</button>
+  </div>
+</div>
+
+<!-- PLACE DETAIL MODAL -->
+<div id="place-modal" class="modal" hidden>
+  <div class="modal-card wide card">
+    <button class="close" onclick="document.getElementById('place-modal').hidden=true">✕</button>
+    <div id="place-detail"></div>
+    <div class="comments">
+      <h4>💬 Bình luận (cập nhật realtime)</h4>
+      <form id="comment-form">
+        <input name="user_name" placeholder="Tên của bạn" required>
+        <textarea name="content" placeholder="Cảm nhận của bạn về nơi này..." required></textarea>
+        <select name="rating"><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option></select>
+        <button class="btn primary">Gửi bình luận</button>
+      </form>
+      <div id="comment-list"></div>
+    </div>
+  </div>
+</div>
+
+<footer>🏛️ Làng cổ Đường Lâm · Bản địa hóa bởi cộng đồng · Powered by AI · 2026</footer>
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
